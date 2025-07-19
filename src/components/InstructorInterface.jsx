@@ -1169,3 +1169,477 @@ export default function InstructorInterface() {
                       localStorage.setItem('instructor-final-questions', JSON.stringify(newSettings))
                     }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+placeholder="Enter the correct answer..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Hint (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={finalQuestionSettings.groups?.[selectedGroup]?.[0]?.hint || ''}
+                    onChange={(e) => {
+                      const currentQuestion = finalQuestionSettings.groups?.[selectedGroup]?.[0] || {}
+                      const updatedQuestion = {
+                        ...currentQuestion,
+                        hint: e.target.value
+                      }
+                      updateFinalQuestion(selectedGroup, updatedQuestion)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Optional hint for students..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Information Revealed When Correct
+                  </label>
+                  <textarea
+                    value={finalQuestionSettings.groups?.[selectedGroup]?.[0]?.info || ''}
+                    onChange={(e) => {
+                      const currentQuestion = finalQuestionSettings.groups?.[selectedGroup]?.[0] || {}
+                      const updatedQuestion = {
+                        ...currentQuestion,
+                        info: e.target.value
+                      }
+                      updateFinalQuestion(selectedGroup, updatedQuestion)
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows="3"
+                    placeholder="Information revealed when student answers correctly..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Information Image (Optional)
+                  </label>
+                  {finalQuestionSettings.groups?.[selectedGroup]?.[0]?.infoImage ? (
+                    <div className="space-y-2">
+                      <img
+                        src={finalQuestionSettings.groups[selectedGroup][0].infoImage.data}
+                        alt="Information"
+                        className="w-32 h-32 object-cover rounded border"
+                      />
+                      <button
+                        onClick={() => {
+                          const currentQuestion = finalQuestionSettings.groups?.[selectedGroup]?.[0] || {}
+                          const updatedQuestion = {
+                            ...currentQuestion,
+                            infoImage: null
+                          }
+                          updateFinalQuestion(selectedGroup, updatedQuestion)
+                        }}
+                        className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="cursor-pointer inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                      Upload Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0]
+                          if (file) {
+                            if (file.size > 5 * 1024 * 1024) {
+                              alert('File size must be less than 5MB')
+                              return
+                            }
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              const currentQuestion = finalQuestionSettings.groups?.[selectedGroup]?.[0] || {}
+                              const updatedQuestion = {
+                                ...currentQuestion,
+                                infoImage: {
+                                  data: event.target.result,
+                                  name: file.name,
+                                  size: file.size,
+                                  lastModified: new Date().toISOString()
+                                }
+                              }
+                              updateFinalQuestion(selectedGroup, updatedQuestion)
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                  <p className="text-sm text-gray-500 mt-1">
+                    Optional image shown alongside the success information
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Word Scramble Tab */}
+        {activeTab === 'word-scramble' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">Word Scramble Configuration</h2>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Target Word (Solution)
+                  </label>
+                  <input
+                    type="text"
+                    value={wordSettings.targetWord}
+                    onChange={(e) => {
+                      const newWord = e.target.value.toUpperCase()
+                      const newSettings = { ...wordSettings, targetWord: newWord }
+                      assignLettersToGroups(newSettings, newWord, wordSettings.numGroups)
+                      setWordSettings(newSettings)
+                      localStorage.setItem('instructor-word-settings', JSON.stringify(newSettings))
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter the target word..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Number of Groups
+                  </label>
+                  <input
+                    type="number"
+                    value={wordSettings.numGroups}
+                    onChange={(e) => {
+                      const numGroups = parseInt(e.target.value) || 1
+                      const newSettings = { ...wordSettings, numGroups }
+                      assignLettersToGroups(newSettings, wordSettings.targetWord, numGroups)
+                      setWordSettings(newSettings)
+                      localStorage.setItem('instructor-word-settings', JSON.stringify(newSettings))
+                    }}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    min="1"
+                    max="50"
+                  />
+                </div>
+
+                <div>
+                  <button
+                    onClick={() => {
+                      const newSettings = { ...wordSettings }
+                      assignLettersToGroups(newSettings, wordSettings.targetWord, wordSettings.numGroups)
+                      setWordSettings(newSettings)
+                      localStorage.setItem('instructor-word-settings', JSON.stringify(newSettings))
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                  >
+                    🔄 Reassign Letters to Groups
+                  </button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h3 className="font-bold text-blue-800 mb-2">Letter Assignments</h3>
+                  <div className="grid grid-cols-5 md:grid-cols-10 gap-2">
+                    {Object.entries(wordSettings.groupLetters).map(([group, letter]) => (
+                      <div key={group} className="bg-white border border-blue-300 rounded p-2 text-center">
+                        <div className="text-xs text-gray-600">Group {group}</div>
+                        <div className="text-lg font-bold text-blue-600">{letter}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-blue-600 text-sm mt-2">
+                    Each group will receive their assigned letter when they complete the game
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Progress Tab */}
+        {activeTab === 'progress' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold text-gray-800">Student Progress & Data</h2>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={exportStudentData}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                  >
+                    📥 Export JSON
+                  </button>
+                  <button
+                    onClick={exportStudentDataCSV}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all"
+                  >
+                    📊 Export CSV
+                  </button>
+                  <button
+                    onClick={clearStudentData}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all"
+                  >
+                    🗑️ Clear Data
+                  </button>
+                </div>
+              </div>
+
+              {studentProgress.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">📊</div>
+                  <h3 className="text-xl font-bold text-gray-600 mb-2">No Student Data Yet</h3>
+                  <p className="text-gray-500">
+                    Student progress and responses will appear here as they complete the experience.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Student
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Group
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Questions
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Accuracy
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Rooms Visited
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Last Activity
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {studentProgress.map((student, index) => (
+                        <tr key={index} className={student.completed ? 'bg-green-50' : ''}>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-gray-900">{student.name}</div>
+                            <div className="text-sm text-gray-500">{student.semester} {student.year}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {student.groupNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {student.questionsCorrect}/{student.questionsAnswered}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              student.accuracyRate >= 80 
+                                ? 'bg-green-100 text-green-800'
+                                : student.accuracyRate >= 60
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}>
+                              {student.accuracyRate}%
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {student.rooms.join(', ')}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              student.completed 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              {student.completed ? '✅ Complete' : '🟡 In Progress'}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {new Date(student.lastActivity).toLocaleString()}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Statistics Summary */}
+            {studentProgress.length > 0 && (
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4">📊 Class Statistics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="font-bold text-blue-800">Total Students</h4>
+                    <p className="text-2xl font-bold text-blue-600">{studentProgress.length}</p>
+                    <p className="text-sm text-blue-600">Students tracked</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <h4 className="font-bold text-green-800">Completed</h4>
+                    <p className="text-2xl font-bold text-green-600">
+                      {studentProgress.filter(s => s.completed).length}
+                    </p>
+                    <p className="text-sm text-green-600">Finished experience</p>
+                  </div>
+                  <div className="bg-yellow-50 rounded-lg p-4">
+                    <h4 className="font-bold text-yellow-800">In Progress</h4>
+                    <p className="text-2xl font-bold text-yellow-600">
+                      {studentProgress.filter(s => !s.completed).length}
+                    </p>
+                    <p className="text-sm text-yellow-600">Still working</p>
+                  </div>
+                  <div className="bg-purple-50 rounded-lg p-4">
+                    <h4 className="font-bold text-purple-800">Avg Accuracy</h4>
+                    <p className="text-2xl font-bold text-purple-600">
+                      {studentProgress.length > 0 ? 
+                        Math.round(studentProgress.reduce((sum, s) => sum + s.accuracyRate, 0) / studentProgress.length) : 0}%
+                    </p>
+                    <p className="text-sm text-purple-600">Class average</p>
+                  </div>
+                </div>
+
+                {/* Detailed Statistics */}
+                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-bold text-gray-800 mb-3">📈 Progress Distribution</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Preparation Room</span>
+                        <span className="text-sm font-semibold text-blue-600">
+                          {studentProgress.filter(s => s.rooms.includes('preparation-room')).length} students
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Main Room</span>
+                        <span className="text-sm font-semibold text-green-600">
+                          {studentProgress.filter(s => s.rooms.includes('main-room')).length} students
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Completed</span>
+                        <span className="text-sm font-semibold text-purple-600">
+                          {studentProgress.filter(s => s.completed).length} students
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="font-bold text-gray-800 mb-3">🎯 Performance Breakdown</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Excellent (90-100%)</span>
+                        <span className="text-sm font-semibold text-green-600">
+                          {studentProgress.filter(s => s.accuracyRate >= 90).length} students
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Good (80-89%)</span>
+                        <span className="text-sm font-semibold text-blue-600">
+                          {studentProgress.filter(s => s.accuracyRate >= 80 && s.accuracyRate < 90).length} students
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Fair (70-79%)</span>
+                        <span className="text-sm font-semibold text-yellow-600">
+                          {studentProgress.filter(s => s.accuracyRate >= 70 && s.accuracyRate < 80).length} students
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Needs Help (&lt;70%)</span>
+                        <span className="text-sm font-semibold text-red-600">
+                          {studentProgress.filter(s => s.accuracyRate < 70).length} students
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Advanced Tab */}
+        {activeTab === 'advanced' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-xl font-bold text-gray-800 mb-4">⚙️ Advanced Settings</h2>
+              
+              <div className="space-y-6">
+                {/* Data Management */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-red-800 mb-4">🗑️ Data Management</h3>
+                  <p className="text-red-700 mb-4">
+                    Use these tools carefully. Data deletion cannot be undone.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={clearStudentData}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all mr-3"
+                    >
+                      Clear All Student Progress Data
+                    </button>
+                    
+                    <button
+                      onClick={clearAllData}
+                      className="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition-all"
+                    >
+                      ⚠️ Clear ALL Data (Settings + Progress)
+                    </button>
+                  </div>
+                </div>
+
+                {/* Import/Export */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-blue-800 mb-4">💾 Import/Export Configuration</h3>
+                  <p className="text-blue-700 mb-4">
+                    Save your configuration or import settings from another setup.
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <button
+                      onClick={exportConfig}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all mr-3"
+                    >
+                      📤 Export Configuration
+                    </button>
+                    
+                    <label className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all cursor-pointer">
+                      📥 Import Configuration
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={importConfig}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Debug Information */}
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
+                  <h3 className="text-lg font-bold text-gray-800 mb-4">🔧 Debug Information</h3>
+                  <div className="space-y-2 text-sm font-mono">
+                    <div>Room Images: {Object.keys(roomImages).length}</div>
+                    <div>Room Elements: {Object.keys(roomElements).length}</div>
+                    <div>Student Records: {studentData.length}</div>
+                    <div>Word Settings: {wordSettings.targetWord} ({wordSettings.numGroups} groups)</div>
+                    <div>Game Settings: {gameSettings.completionMode}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
